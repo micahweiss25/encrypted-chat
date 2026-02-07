@@ -11,7 +11,6 @@ from client import Client
 import config
 import ipaddress
 
-# TODO: Toggle debug with config settings
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(levelname)s - %(message)s'
@@ -100,6 +99,16 @@ class MainMenu():
             return
 
         result = await self.server.register_peer((host, port))
+
+    def do_pending_requests(self):
+        """List all pending registration requests."""
+        # TODO: Add ability to accept or reject pending registration requests
+        if not self.server.pending_requests:
+            print("No pending registration requests.")
+            return
+        print("Pending registration requests:")
+        for host in self.server.pending_requests:
+            print(f"- {host}")
 
     def do_list_peers(self):
         """List all registered peers."""

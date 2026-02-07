@@ -5,9 +5,8 @@ class Client():
     def __init__(self, pub_key, host, port):
         self.pub_key = pub_key
         self.host: str = host
-        self.port: int = port
+        self.listener_port = port
         self.messages: list[str] = []
-        self.listener = None
 
     async def get_messages(self):
         """Retrieve and clear the client's messages."""
