@@ -68,7 +68,7 @@ class Message():
         # Convert message id to message  name
         msg_name = None
         try:
-            msg_name = cls.MsgID(id).name
+            msg_name = self.MsgID(id).name
         except ValueError:
             raise ValueError(f"Invalid message ID: {id}")
 
@@ -94,7 +94,7 @@ class Message():
                 ack_id = struct.unpack("!I", data[4:8])[0]
                 ack_name = None
                 try:
-                    ack_name = cls.AckID(ack_id).name
+                    ack_name = self.AckID(ack_id).name
                 except ValueError:
                     raise ValueError(f"Invalid ack ID: {ack_id}")
 

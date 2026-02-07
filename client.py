@@ -1,4 +1,5 @@
 from typing import Tuple
+import asyncio
 
 class Client():
     """Store incoming messages."""
@@ -17,5 +18,6 @@ class Client():
     async def reader_loop(self):
         """Continuously read messages from the client."""
         while True:
+            await asyncio.sleep(1)
             for message in await self.get_messages():
                 print(f"{self.host} - {message}")

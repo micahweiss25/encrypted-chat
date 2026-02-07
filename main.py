@@ -30,7 +30,7 @@ class MainMenu():
         self.listener = asyncio.create_task(self.server.start())
 
         # TODO: Add nested autocomplete for chat to list registered peers to chat with
-        completer = WordCompleter(['register', 'list_peers', 'chat', 'exit'], ignore_case=True)
+        completer = WordCompleter(['list_peers', 'chat', 'exit'], ignore_case=True)
         # TODO: Add history autocompletion to the main menu
         session = PromptSession(
             completer=completer,
@@ -74,42 +74,6 @@ class MainMenu():
                 doc = method.__doc__ or ''
                 print(f"{command}: {doc.strip()}")
 
-    async def do_register(self, arg):
-        """Register a new peer: register <host> <port>"""
-        if len(arg) != 3:
-            print("Usage: register <host> <port>")
-            return
-
-        # TODO: Refactor input validation to a separate function to avoid code duplication with chat command
-        host = arg[1]
-        try:
-            ipaddress.IPv4Address(host)
-        except Exception:
-            print("Invalid host. Host must be a valid IPv4 address (e.g. 192.168.1.10).")
-            return
-
-        try:
-            port = int(arg[2])
-        except ValueError:
-            print("Invalid port. Port must be an integer.")
-            return
-
-        if not (1 <= port <= 65535):
-            print("Invalid port. Port must be in range 1-65535.")
-            return
-
-        result = await self.server.register_peer((host, port))
-
-    def do_pending_requests(self):
-        """List all pending registration requests."""
-        # TODO: Add ability to accept or reject pending registration requests
-        if not self.server.pending_requests:
-            print("No pending registration requests.")
-            return
-        print("Pending registration requests:")
-        for host in self.server.pending_requests:
-            print(f"- {host}")
-
     def do_list_peers(self):
         """List all registered peers."""
         if not self.server.clients:
@@ -120,7 +84,7 @@ class MainMenu():
             print(f"- {host}")
 
     async def do_chat(self, arg):
-        """Open a chat with a registered peer: chat <host>"""
+        """Open a chat with a registered peer or initate a chat with a new peer: chat <host>"""
         if len(arg) != 2:
             print("Usage: chat <host>")
             return
@@ -133,12 +97,7 @@ class MainMenu():
             print("Invalid host. Host must be a valid IPv4 address (e.g. 192.168.1.10).")
             return
 
-        client = self.server.clients.get(host)
-        if not client:
-            print(f"No registered peer with host {host}.")
-            return
-
-        chat_menu = ChatMenu(client)
+        chat_menu = ChatMenu(host, self.server)
         await chat_menu.start()
 
     async def do_exit(self):

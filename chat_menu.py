@@ -4,26 +4,43 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.completion import WordCompleter
+from message import Message
 
 class ChatMenu():
     """Command line interface for the chat menu."""
     intro = "Chat with ADDRESS"
     prompt = "> "
 
-    def __init__(self, client):
-        self.client = client
+    def __init__(self, host, server):
+        self.server = server
+        self.host = host
+        self.client = self.server.clients.get(host)
 
     async def start(self):
         """process chat commands."""
-        print(self.intro)
-        self.reader_loop = asyncio.create_task(self.client.reader_loop())
-
         completer = WordCompleter(['send', 'help', 'exit'], ignore_case=True)
         session = PromptSession(
             completer=completer,
             history=FileHistory('.history.txt'),
             auto_suggest=AutoSuggestFromHistory()
         )
+
+        print(self.intro)
+        # If the client doesn't exist, prompt for port and attempt to register
+        if not self.client:
+            print("Client not registered.")
+            port = input("Enter hosts port to begin registration: ")
+            if not port.isdigit():
+                print("Invalid port. Exiting chat.")
+                return
+            # initiate registration
+            else:
+                await self.server.send_message(self.host, int(port), Message.MsgID.REGISTER.value)
+                print(self.server.clients)
+            self.client = self.server.clients.get(self.host)
+            print(f"host name {self.host}")
+            
+        self.reader_loop = asyncio.create_task(self.client.reader_loop())
 
         while True:
             try:
@@ -35,7 +52,12 @@ class ChatMenu():
                 else:
                     command = words[0]
                     if command == "send":
-                        await self.do_send(words)
+                        if len(words) != 2:
+                            print("Usage: send '<message>'")
+                            continue
+                        else:
+                            print("Client listener port: ", self.client.listener_port)
+                            await self.server.send_message(self.host, self.client.listener_port, Message.MsgID.TEXT.value, words[1])
                     elif command == "help":
                         self.do_help()
                     elif command == "exit":
