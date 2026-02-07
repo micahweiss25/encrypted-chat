@@ -1,0 +1,22 @@
+from typing import Tuple
+
+class Client():
+    """Store incoming messages."""
+    def __init__(self, pub_key, host, port):
+        self.pub_key = pub_key
+        self.host: str = host
+        self.port: int = port
+        self.messages: list[str] = []
+        self.listener = None
+
+    async def get_messages(self):
+        """Retrieve and clear the client's messages."""
+        msgs = self.messages[:]
+        self.messages.clear()
+        return msgs
+
+    async def reader_loop(self):
+        """Continuously read messages from the client."""
+        while True:
+            for message in await self.get_messages():
+                print(f"{self.host} - {message}")
