@@ -11,6 +11,7 @@ from client import Client
 import config
 import ipaddress
 
+# TODO: Toggle debug with config settings
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(levelname)s - %(message)s'
@@ -80,7 +81,7 @@ class MainMenu():
             print("Usage: register <host> <port>")
             return
 
-        # TODO: Input validation for host and port
+        # TODO: Refactor input validation to a separate function to avoid code duplication with chat command
         host = arg[1]
         try:
             ipaddress.IPv4Address(host)
