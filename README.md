@@ -1,3 +1,27 @@
+# Gettings started
+## Test It Out
+find your ip address
+```
+ip a
+```
+Create P1
+```
+python3 main.py
+```
+Create P2 on a different port
+```
+PORT=8001 python3 main.py
+```
+on P1, Connect to P2
+```
+chat 'ip address from above'
+```
+you will be prompted from their port. enter 8001.
+Then send them a message
+```
+send 'test message'
+```
+
 # Sequence Diagrams:
 ## Full Registration
 ```mermaid
