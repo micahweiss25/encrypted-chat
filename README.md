@@ -23,6 +23,10 @@ Then send them a message
 ```
 send 'test message'
 ```
+to view incoming messages on P2, you need to open the chat session
+```
+chat 'ip address from above'
+```
 
 # Sequence Diagrams:
 ## Full Registration
