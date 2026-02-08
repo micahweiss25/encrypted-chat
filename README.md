@@ -1,4 +1,6 @@
 # Gettings started
+## Disclaimer
+This is not a great solution for a secure messaging app. The purpose of this app was to demonstration simple encryption and decryption and I ended up developing a ton of features around that goal.
 ## Test It Out
 find your ip address
 ```
@@ -101,3 +103,4 @@ TODO:
 Known Problems:
 - An random empheral port is used to register new peers. This could cause problems on networks with blocked ports.
 - does not handle if the host changes their port. Will cause a name conflict with the existing host:port if you try to register a new one.
+- if the peer you are reaching out to is not listing, it will error out. If this was a production app, that case would be handled instead of crashing and the app would be ran as a service so it is always listening. 

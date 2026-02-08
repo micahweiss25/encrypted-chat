@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import logging
 
 
 class Settings(BaseSettings):
@@ -16,7 +17,7 @@ class Settings(BaseSettings):
     DESCRIPTION: str = "A messaging app for secure communication."
     HOST: str = "0.0.0.0"
     PORT: int = 8000
-    DEBUG: bool = False
+    LOG_LEVEL: int = logging.INFO
     KEY_LENGTH: int = 2048
     MAX_MESSAGE_SIZE: int = 1024
 

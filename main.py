@@ -11,8 +11,9 @@ from client import Client
 import config
 import ipaddress
 
+log_level = config.get_settings().LOG_LEVEL
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=log_level,
     format='%(levelname)s - %(message)s'
 )
 
