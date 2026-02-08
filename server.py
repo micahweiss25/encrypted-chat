@@ -14,11 +14,18 @@ class Server():
     """Store the server's information and any registered clients."""
     def __init__(self):
         self.priv_key, self.pub_key = self.generate_key()
-        self.clients = {}
+        """dictionary of registered clients were the host is the key and the client object is the value"""
+        self.clients: dict[str, Client] = {}
+        """the ip address to listen for connections on"""
         self.host = config.get_settings().HOST
+        """the port to listen for connections on"""
         self.port = config.get_settings().PORT
-        self.key_lenght = config.get_settings().KEY_LENGTH
+        """the length of the public key"""
+        self.key_length = config.get_settings().KEY_LENGTH
+        """the maximum amount of bytes sent in a message"""
+        # TODO: enforce max message size when sending
         self.max_message_size = config.get_settings().MAX_MESSAGE_SIZE
+        """registration message used to register with peers"""
         self.registration_msg = Message().write_msg(
             "REGISTER",
             self.pub_key.decode(),
@@ -26,15 +33,23 @@ class Server():
         )
 
     async def register_peer(self, pub_key: str, host: str, port: int) -> None:
-        """Register a new client with their public key."""
+        """Register a new client with their public key, host, and listening port."""
         if host in self.clients:
             logging.debug("Peer %s:%s is already registered.", host, port)
 
-        self.clients[host] = Client(pub_key, host, port)
+        self.clients[host] = Client(pub_key=pub_key, host=host, port=port)
         logging.debug("Registered peer %s:%s with public key %s", host, port, pub_key)
 
     async def send_message(self, host: str, listener_port: int, message_id: int, *args) -> None:
-        """Send a message to a registered client."""
+        """
+        Send a message to a peer.
+        
+        ARGS:
+            host: ip address of peer receiving thr message
+            listening_port: port peer is listening for connections on
+            message_id: identifier for message type
+            *args: required arguments for specific message types
+        """
         reader, writer = await asyncio.open_connection(host, listener_port)
 
         if message_id == Message.MsgID.TEXT.value:
@@ -150,6 +165,7 @@ class Server():
             ValueError: If the response message is invalid or if the ack message is invalid.
         RETURN: None
         """
+        host, _ = writer.get_extra_info('peername')
         writer.write(self.registration_msg)
         response = await reader.read(self.max_message_size)
         try:
@@ -157,15 +173,15 @@ class Server():
             if msg_name != Message.MsgID.REGISTER.name:
                 logging.debug("Expected registration message from %s:%s: %s", host, sender_port, msg_name)
             else:
-                await self.register_peer(pub_key=self.pub_key, host=self.host, port=self.port)
+                await self.register_peer(pub_key=pub_key, host=host, port=port)
                 writer.write(Message().write_msg(Message.MsgID.ACK.name, Message.AckID.RECEIVED.value))
         except ValueError as e:
             logging.debug("Received invalid registration message from %s:%s: %s", host, sender_port, e)
             writer.write(Message().write_msg(Message.MsgID.ACK.name, Message.AckID.INVALID.value))
             return
 
-    async def full_registration_resp(self, reader, writer, message):
-        host, sender_port = writer.get_extra_info('peername')
+    async def full_registration_resp(self, reader, writer, message: tuple):
+        host, _ = writer.get_extra_info('peername')
         pub_key, listener_port = message[1], message[2]
         # Attempt to register peer
         await self.register_peer(pub_key=pub_key, host=host, port=listener_port)
@@ -183,8 +199,6 @@ class Server():
                 logging.debug("Unhandled case")
         except ValueError as e:
             logging.debug("Received invalid ack message from %s:%s: %s", host, sender_port, e)
-
-        writer.close()
 
     async def do_text_message(self, reader, writer, message):
         # Check if the sender is registered so we know where to file the message
@@ -211,7 +225,7 @@ class Server():
         """Handle an incoming client connection."""
         host, sender_port = writer.get_extra_info('peername')
         data = await reader.read(self.max_message_size)
-        message = None
+        message: tuple | None = None
         try:
             message = Message().read_msg(data)
         except ValueError as e:
@@ -219,7 +233,7 @@ class Server():
             writer.close()
             return
 
-        msg_name = message[0]
+        msg_name: str = message[0]
 
         # Sender initiates registration by sending a register message
         if msg_name == Message.MsgID.REGISTER.name:
