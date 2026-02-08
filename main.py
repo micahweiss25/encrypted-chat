@@ -16,6 +16,7 @@ logging.basicConfig(
     format='%(levelname)s - %(message)s'
 )
 
+
 class MainMenu():
     """Command line interface for the main menu."""
     intro = "Welcome to the Encrypted Chat. Type help to list commands.\n"
@@ -30,7 +31,8 @@ class MainMenu():
         self.listener = asyncio.create_task(self.server.start())
 
         # TODO: Add nested autocomplete for chat to list registered peers to chat with
-        completer = WordCompleter(['list_peers', 'chat', 'exit'], ignore_case=True)
+        completer = WordCompleter(
+            ['list_peers', 'chat', 'exit'], ignore_case=True)
         # TODO: Add history autocompletion to the main menu
         session = PromptSession(
             completer=completer,

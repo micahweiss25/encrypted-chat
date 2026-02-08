@@ -199,6 +199,7 @@ class Server():
                 logging.debug("Unhandled case")
         except ValueError as e:
             logging.debug("Received invalid ack message from %s:%s: %s", host, listener_port, e)
+
     async def do_text_message(self, reader, writer, message):
         # Check if the sender is registered so we know where to file the message
         host, sender_port = writer.get_extra_info('peername')
