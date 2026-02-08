@@ -1,7 +1,7 @@
 from Crypto.PublicKey import RSA
 from typing import Tuple
 import logging
-import Crypto.Cipher.AES as AES
+import Crypto.Cipher.PKCS1_OAEP as PKCS1_OAEP
 import Crypto.Random as Random
 import datetime
 import asyncio
@@ -57,7 +57,10 @@ class Server():
                 logging.debug("Invalid arguments for text message. Expected (message).")
             else:
                 message = args[0]
-                writer.write(Message().write_msg(Message.MsgID.TEXT.name, message))
+                # Encrypt the message with the peer's public key before sending
+                cipher_rsa = PKCS1_OAEP.new(RSA.import_key(self.clients[host].pub_key))
+                encrypted_message = cipher_rsa.encrypt(message.encode())
+                writer.write(Message().write_msg(Message.MsgID.TEXT.name, encrypted_message))
                 response_message = await reader.read(self.max_message_size)
                 try:
                     # Expect an ack of received, invalid, or unregistered message in response
@@ -200,7 +203,7 @@ class Server():
         except ValueError as e:
             logging.debug("Received invalid ack message from %s:%s: %s", host, listener_port, e)
 
-    async def do_text_message(self, reader, writer, message):
+    async def recv_text_message(self, reader, writer, message):
         # Check if the sender is registered so we know where to file the message
         host, sender_port = writer.get_extra_info('peername')
         client = self.clients.get(host)
@@ -213,7 +216,10 @@ class Server():
             client = self.clients.get(host)
 
         # Peer is registered. Store the message and send an ack
-        client.messages.append(message[1])
+        # Decrypt the message with the peer's public key before storing
+        cipher_rsa = PKCS1_OAEP.new(RSA.import_key(self.priv_key))
+        decrypted_message = cipher_rsa.decrypt(message[1])
+        client.messages.append(decrypted_message.decode())
         writer.write(
             Message().write_msg(
                 Message.MsgID.ACK.name,
@@ -244,7 +250,7 @@ class Server():
         # Sender sends a text message
         elif msg_name == Message.MsgID.TEXT.name:
             try:
-                await self.do_text_message(reader, writer, message)
+                await self.recv_text_message(reader, writer, message)
             except Exception as e:
                 logging.debug("Error handling text message from %s:%s: %s", host, sender_port, e)
         else:

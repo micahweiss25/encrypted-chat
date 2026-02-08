@@ -44,7 +44,7 @@ class Message():
                 raise ValueError("Invalid arguments for text message. Expected (message).")
             else:
                 message = args[0]
-                return struct.pack("!I", self.MsgID.TEXT.value) + struct.pack("!I", len(message)) + message.encode()
+                return struct.pack("!I", self.MsgID.TEXT.value) + struct.pack("!I", len(message)) + message
         elif msg_name == Message.MsgID.ACK.name:
             if len(args) != 1:
                 raise ValueError("Invalid arguments for ack message. Expected (message_id).")
@@ -77,7 +77,7 @@ class Message():
                 raise ValueError("Invalid text message format. Expected at least 8 bytes for message ID and length.")
             else:
                 length = struct.unpack("!I", data[4:8])[0]
-                message = data[8:8+length].decode()
+                message = data[8:8+length]
                 return msg_name, message
         elif msg_name == Message.MsgID.REGISTER.name:
             if len(data) < 10:
