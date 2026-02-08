@@ -173,7 +173,7 @@ class Server():
             if msg_name != Message.MsgID.REGISTER.name:
                 logging.debug("Expected registration message from %s:%s: %s", host, sender_port, msg_name)
             else:
-                await self.register_peer(pub_key=pub_key, host=host, port=port)
+                await self.register_peer(pub_key=pub_key, host=host, port=listener_port)
                 writer.write(Message().write_msg(Message.MsgID.ACK.name, Message.AckID.RECEIVED.value))
         except ValueError as e:
             logging.debug("Received invalid registration message from %s:%s: %s", host, sender_port, e)
@@ -192,14 +192,13 @@ class Server():
         try:
             msg_name, ack_name = Message().read_msg(response_msg)
             if ack_name != Message().AckID.RECEIVED.name:
-                logging.debug("Registration of peer %s:%s was not successful: %s", host, sender_port, ack_name)
+                logging.debug("Registration of peer %s:%s was not successful: %s", host, listener_port, ack_name)
             elif ack_name == Message().AckID.RECEIVED.name:
-                logging.debug("Registration of peer %s:%s successful: %s", host, sender_port, ack_name)
+                logging.debug("Registration of peer %s:%s successful: %s", host, listener_port, ack_name)
             else:
                 logging.debug("Unhandled case")
         except ValueError as e:
-            logging.debug("Received invalid ack message from %s:%s: %s", host, sender_port, e)
-
+            logging.debug("Received invalid ack message from %s:%s: %s", host, listener_port, e)
     async def do_text_message(self, reader, writer, message):
         # Check if the sender is registered so we know where to file the message
         host, sender_port = writer.get_extra_info('peername')
